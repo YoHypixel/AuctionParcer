@@ -51,7 +51,7 @@ func NewClient() *http.Client {
 func BasicData() (*http.Client, AuctionData, error) {
 	newClient := NewClient()
 
-	auction, err := AuctionRequest(0, newClient)
+	auction, err := AuctionRequest(0)
 	if err != nil {
 		fmt.Println(err)
 		return nil, AuctionData{}, errors.New("basic data")
@@ -66,10 +66,10 @@ type ItemData struct {
 	SortedAuctions map[string][]Auction
 }
 
-func (c *ItemData) AddData(wg *sync.WaitGroup, page int, client *http.Client) error {
+func (c *ItemData) AddData(wg *sync.WaitGroup, page int) error {
 	defer wg.Done()
 	defer c.Mutex.Unlock()
-	current, err := AuctionRequest(page, client)
+	current, err := AuctionRequest(page)
 
 	if err != nil {
 		return err

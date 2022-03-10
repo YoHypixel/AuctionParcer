@@ -12,24 +12,23 @@ import (
 	"sync"
 )
 
-func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
+func AuctionRequest(page int) (AuctionData, error) {
 	req, err := http.NewRequest(http.MethodGet, "https://api.hypixel.net/skyblock/auctions", nil)
 	if err != nil {
 		log.Fatalln(err)
-	}
-
-	if client == nil {
-		log.Fatalln("Found it")
 	}
 
 	params := req.URL.Query()
 	params.Add("page", strconv.Itoa(page))
 	req.URL.RawQuery = params.Encode()
 
+	client := NewClient()
+
 	resp, err := client.Do(req)
 
 	if err != nil {
 		fmt.Printf("Error with request: %v\n", err)
+		fmt.Println(req.URL)
 		return AuctionData{}, errors.New("error doing request")
 
 	}
@@ -64,7 +63,7 @@ func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 
 // GetAllItemNames gets data from all pages
 func GetAllItemNames() (*ItemData, AuctionData, error) {
-	client, data, err := BasicData()
+	_, data, err := BasicData()
 
 	if err != nil {
 		return &ItemData{}, data, errors.New("unable to get client")
@@ -76,7 +75,7 @@ func GetAllItemNames() (*ItemData, AuctionData, error) {
 
 		wg.Add(1)
 
-		err = itemData.AddData(&wg, i, client)
+		err = itemData.AddData(&wg, i)
 
 		if err != nil {
 			return &itemData, data, err
