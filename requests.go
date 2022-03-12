@@ -15,11 +15,7 @@ import (
 func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 	req, err := http.NewRequest(http.MethodGet, "https://api.hypixel.net/skyblock/auctions", nil)
 	if err != nil {
-		log.Fatalln(err)
-	}
-
-	if client == nil {
-		log.Fatalln("Found it")
+		fmt.Printf("error with new http request %v\n", err)
 	}
 
 	params := req.URL.Query()
@@ -30,6 +26,11 @@ func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 
 	if err != nil {
 		fmt.Printf("Error with request: %v\n", err)
+		if resp == nil {
+			fmt.Printf("Nothing returned\n")
+		} else {
+			fmt.Printf("This is what was returned %v\n", resp)
+		}
 		return AuctionData{}, errors.New("error doing request")
 
 	}
@@ -39,6 +40,7 @@ func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 
 		return AuctionData{}, errors.New("request is bad ")
 	}
+	fmt.Printf("Request succeeded, page: %v \n", req.URL)
 	defer func(Body io.ReadCloser) {
 		err = Body.Close()
 		if err != nil {
@@ -76,10 +78,16 @@ func GetAllItemNames() (*ItemData, AuctionData, error) {
 
 		wg.Add(1)
 
-		err = itemData.AddData(&wg, i, client)
+		checkData, err := itemData.AddData(&wg, i, client)
 
 		if err != nil {
 			return &itemData, data, err
+		}
+
+		if checkData.TotalPages < data.TotalPages {
+			data.TotalPages = checkData.TotalPages
+		} else if checkData.TotalPages > data.TotalPages {
+			data.TotalPages = checkData.TotalPages
 		}
 
 	}

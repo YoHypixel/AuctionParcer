@@ -37,8 +37,10 @@ type Auction struct {
 
 func NewClient() *http.Client {
 	tr := &http.Transport{
-		MaxIdleConnsPerHost: 2048,
-		TLSHandshakeTimeout: 0 * time.Second,
+		MaxIdleConnsPerHost:   2048,
+		TLSHandshakeTimeout:   1 * time.Minute,
+		ResponseHeaderTimeout: 1 * time.Minute,
+		IdleConnTimeout:       1 * time.Minute,
 	}
 
 	c := http.Client{
@@ -66,23 +68,19 @@ type ItemData struct {
 	SortedAuctions map[string][]Auction
 }
 
-func (c *ItemData) AddData(wg *sync.WaitGroup, page int, client *http.Client) error {
-	defer wg.Done()
-	defer c.Mutex.Unlock()
+func (c *ItemData) AddData(waitGroup *sync.WaitGroup, page int, client *http.Client) (AuctionData, error) {
 	current, err := AuctionRequest(page, client)
-
+	defer waitGroup.Done()
 	if err != nil {
-		return err
+		return AuctionData{}, err
 	}
 
 	c.Mutex.Lock()
-	for _, i := range current.Auctions {
+	defer c.Mutex.Unlock()
 
-		if i.Uuid == "" {
-			return errors.New("add data has failed")
-		}
+	for _, i := range current.Auctions {
 
 		c.Auctions = append(c.Auctions, i)
 	}
-	return nil
+	return current, nil
 }

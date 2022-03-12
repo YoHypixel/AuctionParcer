@@ -13,7 +13,7 @@ func main() {
 
 	var waitGroup sync.WaitGroup
 
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 190; i++ {
 		waitGroup.Add(1)
 		go func() {
 			defer waitGroup.Done()
