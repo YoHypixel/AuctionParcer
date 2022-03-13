@@ -1,11 +1,9 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"sync"
-	"time"
 )
 
 type AuctionData struct {
@@ -37,10 +35,11 @@ type Auction struct {
 
 func NewClient() *http.Client {
 	tr := &http.Transport{
-		MaxIdleConnsPerHost:   2048,
-		TLSHandshakeTimeout:   1 * time.Minute,
-		ResponseHeaderTimeout: 1 * time.Minute,
-		IdleConnTimeout:       1 * time.Minute,
+		TLSHandshakeTimeout:   0,
+		ResponseHeaderTimeout: 0,
+		IdleConnTimeout:       0,
+		MaxConnsPerHost:       0,
+		MaxIdleConnsPerHost:   2000000,
 	}
 
 	c := http.Client{
@@ -52,11 +51,10 @@ func NewClient() *http.Client {
 
 func BasicData() (*http.Client, AuctionData, error) {
 	newClient := NewClient()
-
 	auction, err := AuctionRequest(0, newClient)
 	if err != nil {
 		fmt.Println(err)
-		return nil, AuctionData{}, errors.New("basic data")
+		return newClient, AuctionData{}, err
 	}
 	return newClient, auction, nil
 }

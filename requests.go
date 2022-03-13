@@ -18,10 +18,12 @@ func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 		fmt.Printf("error with new http request %v\n", err)
 	}
 
-	params := req.URL.Query()
-	params.Add("page", strconv.Itoa(page))
-	req.URL.RawQuery = params.Encode()
-
+	req.Header.Set("user-agent", "auction parser golang")
+	if page != 0 {
+		params := req.URL.Query()
+		params.Add("page", strconv.Itoa(page))
+		req.URL.RawQuery = params.Encode()
+	}
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -29,10 +31,9 @@ func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 		if resp == nil {
 			fmt.Printf("Nothing returned\n")
 		} else {
-			fmt.Printf("This is what was returned %v\n", resp)
+			fmt.Printf("This is what was returned %v\n", resp.Status)
 		}
 		return AuctionData{}, errors.New("error doing request")
-
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -69,12 +70,12 @@ func GetAllItemNames() (*ItemData, AuctionData, error) {
 	client, data, err := BasicData()
 
 	if err != nil {
-		return &ItemData{}, data, errors.New("unable to get client")
+		return &ItemData{}, data, err
 	}
 
 	itemData := ItemData{}
 	var wg sync.WaitGroup
-	for i := 0; i < data.TotalPages; i++ {
+	for i := 1; i < data.TotalPages; i++ {
 
 		wg.Add(1)
 
