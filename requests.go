@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
-	"time"
 )
 
 func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
@@ -84,13 +83,13 @@ func GetAllItemNames() (*ItemData, AuctionData, error) {
 
 	testClient := NewClient()
 
-	basicData, err := AuctionRequest(5, testClient)
+	basicData, err := AuctionRequest(0, testClient)
 
 	if err != nil {
 		return &itemData, AuctionData{}, err
 	}
 
-	for i := 7; i < basicData.TotalPages; i++ {
+	for i := 1; i < basicData.TotalPages; i++ {
 
 		wg.Add(1)
 
@@ -106,7 +105,7 @@ func GetAllItemNames() (*ItemData, AuctionData, error) {
 		} else if checkData.TotalPages > basicData.TotalPages {
 			basicData.TotalPages = checkData.TotalPages
 		}
-		time.Sleep(250 * time.Millisecond)
+		// time.Sleep(50 * time.Millisecond)
 
 	}
 	wg.Wait()

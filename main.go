@@ -31,7 +31,7 @@ func main() {
 			fmt.Println("Clearing data")
 
 		}()
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 	}
 
 	waitGroup.Wait()
