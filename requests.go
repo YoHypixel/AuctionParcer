@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
@@ -20,19 +21,21 @@ func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 
 	req.Header.Set("user-agent", "auction parser golang")
 	if page != 0 {
-		params := req.URL.Query()
-		params.Add("page", strconv.Itoa(page))
-		req.URL.RawQuery = params.Encode()
+		req.URL.RawQuery = "page=" + strconv.Itoa(page)
 	}
 	resp, err := client.Do(req)
 
 	if err != nil {
+
 		fmt.Printf("Error with request: %v\n", err)
 		if resp == nil {
+
 			fmt.Printf("Nothing returned\n")
+
 		} else {
 			fmt.Printf("This is what was returned %v\n", resp.Status)
 		}
+
 		return AuctionData{}, errors.New("error doing request")
 	}
 
@@ -42,11 +45,14 @@ func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 		return AuctionData{}, errors.New("request is bad ")
 	}
 	fmt.Printf("Request succeeded, page: %v \n", req.URL)
+
 	defer func(Body io.ReadCloser) {
+
 		err = Body.Close()
 		if err != nil {
 			log.Panicf("unable to close body: %v\n", err)
 		}
+
 	}(resp.Body)
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -67,31 +73,42 @@ func AuctionRequest(page int, client *http.Client) (AuctionData, error) {
 
 // GetAllItemNames gets data from all pages
 func GetAllItemNames() (*ItemData, AuctionData, error) {
-	client, data, err := BasicData()
+	// client, data, err := BasicData()
 
-	if err != nil {
-		return &ItemData{}, data, err
-	}
+	// if err != nil {
+	//	return &ItemData{}, data, err
+	//}
 
 	itemData := ItemData{}
 	var wg sync.WaitGroup
-	for i := 1; i < data.TotalPages; i++ {
+
+	testClient := NewClient()
+
+	basicData, err := AuctionRequest(5, testClient)
+
+	if err != nil {
+		return &itemData, AuctionData{}, err
+	}
+
+	for i := 7; i < basicData.TotalPages; i++ {
 
 		wg.Add(1)
 
-		checkData, err := itemData.AddData(&wg, i, client)
+		checkData, err := itemData.AddData(&wg, i, testClient)
 
 		if err != nil {
-			return &itemData, data, err
+			return &itemData, basicData, err
 		}
 
-		if checkData.TotalPages < data.TotalPages {
-			data.TotalPages = checkData.TotalPages
-		} else if checkData.TotalPages > data.TotalPages {
-			data.TotalPages = checkData.TotalPages
+		if checkData.TotalPages < basicData.TotalPages {
+			basicData.TotalPages = checkData.TotalPages
+
+		} else if checkData.TotalPages > basicData.TotalPages {
+			basicData.TotalPages = checkData.TotalPages
 		}
+		time.Sleep(250 * time.Millisecond)
 
 	}
 	wg.Wait()
-	return &itemData, data, nil
+	return &itemData, basicData, nil
 }

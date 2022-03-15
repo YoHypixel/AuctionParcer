@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type AuctionData struct {
@@ -35,30 +35,22 @@ type Auction struct {
 
 func NewClient() *http.Client {
 	tr := &http.Transport{
+
 		TLSHandshakeTimeout:   0,
 		ResponseHeaderTimeout: 0,
 		IdleConnTimeout:       0,
 		MaxConnsPerHost:       0,
-		MaxIdleConnsPerHost:   2000000,
 	}
 
 	c := http.Client{
 		Transport: tr,
+		Timeout:   5 * time.Minute,
 	}
 
 	return &c
 }
 
-func BasicData() (*http.Client, AuctionData, error) {
-	newClient := NewClient()
-	auction, err := AuctionRequest(0, newClient)
-	if err != nil {
-		fmt.Println(err)
-		return newClient, AuctionData{}, err
-	}
-	return newClient, auction, nil
-}
-
+// ItemData /*
 type ItemData struct {
 	Mutex          sync.Mutex
 	ItemNames      []string
@@ -67,6 +59,7 @@ type ItemData struct {
 }
 
 func (c *ItemData) AddData(waitGroup *sync.WaitGroup, page int, client *http.Client) (AuctionData, error) {
+
 	current, err := AuctionRequest(page, client)
 	defer waitGroup.Done()
 	if err != nil {

@@ -1,3 +1,3 @@
 # Hypixel-Auctions
 
-A fast auction parcer
+A fast auction parser
